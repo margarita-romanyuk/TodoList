@@ -1,17 +1,4 @@
-workflows:
-  version: 2
-  build: 
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: main
-      - deploy:
-          filters:
-            branches:
-              only: main
-          requires:
-            - build
+version: 2.1
 
 orbs:
   ruby: circleci/ruby@1.4.0
@@ -36,6 +23,20 @@ deploy:
         name: world
         command: echo world
 
+workflows:
+  version: 2
+  build: 
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+      - deploy:
+          filters:
+            branches:
+              only: main
+          requires:
+            - build
 
 
 # docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
