@@ -29,13 +29,18 @@ jobs:
       - image: cimg/ruby:3.1.0
     steps:
       - run:
-          name: deploy-application
-          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS 
-            "export CONTAINER_NAME=\"$CONTAINER_NAME\";
-            export IMAGE_NAME=\"$IMAGE_NAME\";
-            rm -rf TodoList/;
-            git clone https://github.com/margarita-romanyuk/TodoList;
-            source TodoList/deploy.sh"
+        name: deploy-application
+        command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "
+          sudo apt update -y &&
+          sudo apt install -y docker.io &&
+          sudo systemctl start docker &&
+          sudo usermod -aG docker \$USER &&
+          export CONTAINER_NAME=\"$CONTAINER_NAME\" &&
+          export IMAGE_NAME=\"$IMAGE_NAME\" &&
+          rm -rf TodoList/ &&
+          git clone https://github.com/margarita-romanyuk/TodoList &&
+          source TodoList/deploy.sh"
+
 
 workflows:
   version: 2
