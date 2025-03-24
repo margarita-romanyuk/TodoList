@@ -13,7 +13,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: docker-login
-          command: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
       - run:
           name: build-docker-image
           command: docker build -t $IMAGE_NAME:latest . --build-arg SECRET_KEY_BASE=$SECRET_KEY_BASE
@@ -24,43 +24,35 @@ jobs:
           name: run-docker-image
           command: docker run -p 3000:3000 -d $IMAGE_NAME
 
-  deploy:  
+  deploy:
     docker:
       - image: cimg/ruby:3.1.0
     steps:
       - run:
-        name: deploy-application
-        command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "
-          sudo apt update -y &&
-          sudo apt install -y docker.io &&
-          sudo systemctl start docker &&
-          sudo usermod -aG docker \$USER &&
-          export CONTAINER_NAME=\"$CONTAINER_NAME\" &&
-          export IMAGE_NAME=\"$IMAGE_NAME\" &&
-          rm -rf TodoList/ &&
-          git clone https://github.com/margarita-romanyuk/TodoList &&
-          source TodoList/deploy.sh"
-
+          name: deploy-application
+          command: |
+            ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "
+              sudo apt update -y &&
+              sudo apt install -y docker.io &&
+              sudo systemctl start docker &&
+              sudo usermod -aG docker \$USER &&
+              export CONTAINER_NAME=\"$CONTAINER_NAME\" &&
+              export IMAGE_NAME=\"$IMAGE_NAME\" &&
+              rm -rf TodoList/ &&
+              git clone https://github.com/margarita-romanyuk/TodoList &&
+              source TodoList/deploy.sh"
 
 workflows:
   version: 2
-  build: 
+  deploy_pipeline:  # Unique name for workflow
     jobs:
       - build:
           filters:
             branches:
               only: main
       - deploy:
+          requires:
+            - build
           filters:
             branches:
               only: main
-          requires:
-            - build
-
-
-
-
-        # name: Deploy to EC2 via SSH
-        #   command: |
-        #     
-
