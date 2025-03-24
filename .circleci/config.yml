@@ -1,0 +1,63 @@
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+      - deploy:
+          filters:
+            branches:
+              only: main
+          requires:
+            - build
+
+orbs:
+  ruby: circleci/ruby@1.4.0
+
+jobs:
+  build:
+    working_directory: ~/todo_list
+    docker:
+      - image: cimg/ruby:3.1.0
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Hello
+          command: echo hello 
+
+deploy:
+  docker:
+    - image: cimg/ruby:3.1.0
+  steps:
+    - run:
+      name: world
+      command: echo world
+
+
+# docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      # - run:
+      #     name: Build Docker image (with SECRET_KEY_BASE)
+      #     command: |
+      #       docker build \
+      #         --build-arg SECRET_KEY_BASE=$SECRET_KEY_BASE \
+      #         -t $IMAGE_NAME:latest \
+      #         .
+      # - run:
+      #     name: Push Docker image
+      #     command: docker push $IMAGE_NAME:latest
+      # - run:
+      #     name: Test Docker image locally
+      #     command: docker run -p 3000:3000 -d $IMAGE_NAME:latest
+        # name: Deploy to EC2 via SSH
+        #   command: |
+        #     ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "bash -c '
+        #       export CONTAINER_NAME=\"$CONTAINER_NAME\"
+        #       export IMAGE_NAME=\"$IMAGE_NAME\"
+        #       rm -rf TodoListRuby/
+        #       git clone https://github.com/margarita-romanyuk/TodoListRuby
+        #       source TodoListRuby/deploy.sh
+        #     '"
+
