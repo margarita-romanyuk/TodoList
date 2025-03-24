@@ -12,16 +12,30 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Hello
-          command: echo hello 
+          name: docker-login
+          command: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - run:
+          name: build-docker-image
+          command: docker build -t $IMAGE_NAME:latest . --build-arg SECRET_KEY_BASE=$SECRET_KEY_BASE
+      - run:
+          name: publish-docker-image
+          command: docker push $IMAGE_NAME
+      - run:
+          name: run-docker-image
+          command: docker run -p 3000:3000 -d $IMAGE_NAME
 
   deploy:  
     docker:
       - image: cimg/ruby:3.1.0
     steps:
       - run:
-          name: World
-          command: echo world
+          name: deploy-application
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS 
+            "export CONTAINER_NAME=\"$CONTAINER_NAME\";
+            export IMAGE_NAME=\"$IMAGE_NAME\";
+            rm -rf TodoList/;
+            git clone https://github.com/margarita-romanyuk/TodoList;
+            source TodoList/deploy.sh"
 
 workflows:
   version: 2
@@ -40,27 +54,8 @@ workflows:
 
 
 
-# docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      # - run:
-      #     name: Build Docker image (with SECRET_KEY_BASE)
-      #     command: |
-      #       docker build \
-      #         --build-arg SECRET_KEY_BASE=$SECRET_KEY_BASE \
-      #         -t $IMAGE_NAME:latest \
-      #         .
-      # - run:
-      #     name: Push Docker image
-      #     command: docker push $IMAGE_NAME:latest
-      # - run:
-      #     name: Test Docker image locally
-      #     command: docker run -p 3000:3000 -d $IMAGE_NAME:latest
+
         # name: Deploy to EC2 via SSH
         #   command: |
-        #     ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "bash -c '
-        #       export CONTAINER_NAME=\"$CONTAINER_NAME\"
-        #       export IMAGE_NAME=\"$IMAGE_NAME\"
-        #       rm -rf TodoListRuby/
-        #       git clone https://github.com/margarita-romanyuk/TodoListRuby
-        #       source TodoListRuby/deploy.sh
-        #     '"
+        #     
 
